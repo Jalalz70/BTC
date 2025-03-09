@@ -1,0 +1,205 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © jalal9170
+
+//@version=5
+strategy("Bitcoin 2", overlay=true, margin_long=1, margin_short=1 ,initial_capital =1000)
+
+UseDateRange = input.bool(false,"UseDateRange")
+StartDate =  input.time(timestamp("20 Jul 2013 00:00 +0300"), "Date")
+EndDate = input.time(timestamp("20 Jul 2015 00:00 +0300"), "Date")
+var TimeOk = false
+TimeOk := false
+if UseDateRange ==false
+    TimeOk :=true
+if UseDateRange ==true and time >= StartDate and time <= EndDate
+    TimeOk := true
+
+
+
+
+
+
+ProfitMethod = input.string("FourthMethod",options =["FirstMethod","SecondMethod","ThirdMthod","FourthMethod","FifthMethod"])
+
+
+firstLine = input.float(20,"First Line Percentage")
+SecondLine = input.float(50,"Second Line Percentage")
+ThirdLine = input.float(74,"Third Line Percentage")
+firstLinevolume = input.float(0.2,"First Line volume")
+SecondLinevolume = input.float(0.5,"Second Line volume")
+ThirdLinevolume = input.float(1,"Third Line volume")
+
+
+ProfitTaker = input.float(2)
+
+
+// محاسبه بالاترین قیمت در دوره مشخص
+highestPrice = ta.max(high)
+// محاسبه 20% کاهش از بالاترین قیمت
+//priceDrop20 = highestPrice * 0.8
+priceFirstLine = highestPrice * ((100 -firstLine)*0.01)
+priceSeclondLine = highestPrice * ((100 -SecondLine)*0.01)
+priceThirdLine = highestPrice * ((100 -ThirdLine)*0.01)
+
+
+
+// نمایش بالاترین قیمت و قیمت هدف برای دیدن راحت‌تر
+plot(highestPrice, color=color.white, title="Highest Price")
+plot(priceFirstLine, color=color.green, title="20% Drop Price")
+plot(priceSeclondLine, color=color.yellow, title="50% Drop Price")
+plot(priceThirdLine, color=color.red, title="70% Drop Price")
+
+
+var string Status ="First Start"
+
+
+
+
+        
+
+
+
+
+if (ProfitMethod == "FirstMethod" )
+    
+    if ta.crossunder(close,priceFirstLine) and TimeOk == true
+        strategy.close("Buy",qty_percent = 100,comment = "close for open first buy and equity: "+str.tostring(strategy.equity))
+        strategy.entry("Buy",strategy.long,((strategy.equity*firstLinevolume)/close),comment = "open first buy")
+        Status := "First Buy"
+
+
+    if ta.crossunder(close,priceSeclondLine) and (Status == "First Buy" or Status == "On Profit")  and TimeOk == true
+        strategy.close("Buy","Close for open second Buy and equity: "+str.tostring(strategy.equity),qty_percent = 100)
+        strategy.entry("Buy",strategy.long,((strategy.equity*SecondLinevolume)/close),comment = "open Second buy")          
+        Status := "Second Buy"
+            
+
+    if ta.crossunder(close,priceThirdLine) and Status == "Second Buy"  and TimeOk == true
+        strategy.close("Buy","Close for open third Buy and equity: "+str.tostring(strategy.equity),qty_percent = 100)
+        strategy.entry("Buy",strategy.long,((strategy.equity*ThirdLinevolume)/close),comment = "open Third buy")
+        Status := "Third Buy"
+    
+
+    // profits
+    if(close > strategy.opentrades.entry_price(strategy.opentrades -1) *ProfitTaker   and TimeOk == true)
+        volumee = strategy.opentrades.size(strategy.opentrades-1)
+        strategy.close("Buy",qty_percent = 100,comment = "close for rebuy on profit and equity: "+str.tostring(strategy.equity))
+        strategy.entry("Buy",strategy.long,volumee/2,comment = "Rebuy on Profit")
+
+        Status := "On Profit"
+
+
+
+if (ProfitMethod == "SecondMethod")
+    
+    if ta.crossunder(close,priceFirstLine) and TimeOk == true
+        strategy.close("Buy",qty_percent = 100,comment = "close for open first buy and equity: "+str.tostring(strategy.equity))
+        strategy.entry("Buy",strategy.long,((strategy.equity*firstLinevolume)/close),comment = "open first buy")
+        Status := "First Buy"
+
+
+    if ta.crossunder(close,priceSeclondLine) and (Status == "First Buy" or Status == "On Profit")  and TimeOk == true
+        strategy.close("Buy","Close for open second Buy and equity: "+str.tostring(strategy.equity),qty_percent = 100)
+        strategy.entry("Buy",strategy.long,((strategy.equity*SecondLinevolume)/close),comment = "open Second buy")          
+        Status := "Second Buy"
+            
+
+    if ta.crossunder(close,priceThirdLine) and Status == "Second Buy"  and TimeOk == true
+        strategy.close("Buy","Close for open third Buy and equity: "+str.tostring(strategy.equity),qty_percent = 100)
+        strategy.entry("Buy",strategy.long,((strategy.equity*ThirdLinevolume)/close),comment = "open Third buy")
+        Status := "Third Buy"
+    
+
+    // profits
+    if(close > strategy.opentrades.entry_price(strategy.opentrades -1) *ProfitTaker and close >priceFirstLine  and TimeOk == true)
+        volumee = strategy.opentrades.size(strategy.opentrades-1)
+        strategy.close("Buy",qty_percent = 100,comment = "close for rebuy on profit and equity: "+str.tostring(strategy.equity))
+        strategy.entry("Buy",strategy.long,volumee/2,comment = "Rebuy on Profit")
+
+        Status := "On Profit"
+
+
+
+
+
+
+
+
+
+
+
+if (ProfitMethod == "ThirdMthod")
+    var float LastWhiteLinePrice =0    
+
+    if ta.crossunder(close,priceFirstLine) and TimeOk == true and LastWhiteLinePrice != highestPrice
+        LastWhiteLinePrice := highestPrice
+        strategy.close("Buy",qty_percent = 100,comment = "close for open first buy and equity: "+str.tostring(strategy.equity))
+        strategy.entry("Buy",strategy.long,((strategy.equity*firstLinevolume)/close),comment = "open first buy")
+        Status := "First Buy"
+
+
+    if ta.crossunder(close,priceSeclondLine) and (Status == "First Buy" or Status == "On Profit")  and TimeOk == true
+        strategy.close("Buy","Close for open second Buy and equity: "+str.tostring(strategy.equity),qty_percent = 100)
+        strategy.entry("Buy",strategy.long,((strategy.equity*SecondLinevolume)/close),comment = "open Second buy")          
+        Status := "Second Buy"
+            
+
+    if ta.crossunder(close,priceThirdLine) and Status == "Second Buy"  and TimeOk == true
+        strategy.close("Buy","Close for open third Buy and equity: "+str.tostring(strategy.equity),qty_percent = 100)
+        strategy.entry("Buy",strategy.long,((strategy.equity*ThirdLinevolume)/close),comment = "open Third buy")
+        Status := "Third Buy"
+    
+
+    // profits
+    if(close > strategy.opentrades.entry_price(strategy.opentrades -1) *ProfitTaker and close >priceFirstLine  and TimeOk == true)
+        volumee = strategy.opentrades.size(strategy.opentrades-1)
+        strategy.close("Buy",qty_percent = 100,comment = "close for rebuy on profit and equity: "+str.tostring(strategy.equity))
+        strategy.entry("Buy",strategy.long,volumee/2,comment = "Rebuy on Profit")
+
+        Status := "On Profit"
+
+
+
+
+
+
+if (ProfitMethod == "FourthMethod")
+    var float LastWhiteLinePrice =0    
+    var float LastWhiteLinePrice2 = highestPrice  
+
+    if ta.crossunder(close,priceFirstLine) and TimeOk == true and LastWhiteLinePrice != highestPrice
+        LastWhiteLinePrice := highestPrice
+        strategy.close("Buy",qty_percent = 100,comment = "close for open first buy and equity: "+str.tostring(strategy.equity))
+        strategy.entry("Buy",strategy.long,((strategy.equity*firstLinevolume)/close),comment = "open first buy")
+        Status := "First Buy"
+        LastWhiteLinePrice2 := highestPrice
+
+
+    if ta.crossunder(close,priceSeclondLine) and (Status == "First Buy" or Status == "On Profit")  and TimeOk == true
+        strategy.close("Buy","Close for open second Buy and equity: "+str.tostring(strategy.equity),qty_percent = 100)
+        strategy.entry("Buy",strategy.long,((strategy.equity*SecondLinevolume)/close),comment = "open Second buy")          
+        Status := "Second Buy"
+        LastWhiteLinePrice2 := highestPrice 
+            
+
+    if ta.crossunder(close,priceThirdLine) and Status == "Second Buy"  and TimeOk == true
+        strategy.close("Buy","Close for open third Buy and equity: "+str.tostring(strategy.equity),qty_percent = 100)
+        strategy.entry("Buy",strategy.long,((strategy.equity*ThirdLinevolume)/close),comment = "open Third buy")
+        Status := "Third Buy"
+    
+
+    // profits
+    if(close > strategy.opentrades.entry_price(strategy.opentrades -1) *ProfitTaker and close >priceFirstLine and LastWhiteLinePrice2 != highestPrice  and TimeOk == true)
+        LastWhiteLinePrice2 := highestPrice
+        volumee = strategy.opentrades.size(strategy.opentrades-1)
+        strategy.close("Buy",qty_percent = 100,comment = "close for rebuy on profit and equity: "+str.tostring(strategy.equity))
+        strategy.entry("Buy",strategy.long,volumee/2,comment = "Rebuy on Profit")
+        LastWhiteLinePrice2 := highestPrice
+        Status := "On Profit"
+
+
+
+
+
+
+    
